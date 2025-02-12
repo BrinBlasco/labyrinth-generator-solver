@@ -1,0 +1,16 @@
+click to set starting point
+
+BFS,
+DFS,
+Dijkstra
+A-Star
+
+actually implement these fuckers
+but before that get other stuffs working like 
+actually displaying a path, backtrack back to 
+the starting point etc etc
+
+try doing with graph maybe (myb will fix shit idfk)
+
+path with lines and width instead of drawing sqaures 
+cuz fuck squares

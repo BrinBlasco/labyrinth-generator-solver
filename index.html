@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labyrinth</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="./assets/maze_favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <h1 style="padding: 2rem; font-size: 3rem;">
+        Maze Generator and Solver
+    </h1>
+    <div class="main">
+
+        <div class="left"> 
+            <div class="maze"></div>
+        </div>
+
+        <div class="right">
+
+            <div class="back-arrow">
+                <i class="fa fa-chevron-left" aria-hidden="true"></i>
+            </div>
+
+            <div class="maze-parameters">
+                
+                <h3 style="text-align: center;">Settings</h3>
+
+                <div class="setting">
+                    <label id="numrows">Number of Rows</label>
+                    <input type="range" min="5" max="30" name="" value="5" id="numrows">
+                    <p id="numrowsDisp">Default (10)</p>
+                </div>
+
+                <div class="setting">
+                    <label for="numcols">Number of Rows</label>
+                    <input type="range" min="5" max="30" name="" value="5" id="numcols">
+                    <p id="numcolsDisp">Default (10)</p>
+                </div>
+
+                <div class="setting">
+                    <label for="cellsize">Cell Size</label>
+                    <input type="range" min="5" max="50" name="" step="5" value="5" id="cellsize">
+                    <p id="cellsizeDisp">Default (50)</p>
+                </div>
+
+                <div class="setting">
+                    <label for="framerate">Framerate</label>
+                    <input type="range" name="" min="0" max="60" step="5" value="0" id="framerate">
+                    <p id="framerateDisp">Default (0)</p>
+                </div>
+
+                <div class="btns">
+                    <button id="generate">Generate</button>
+                </div>
+            </div>
+
+            <div class="solving-algorithms hidden">
+                
+                <h3 style="text-align: center;">Solving <br> Algorithm</h3>
+
+                <div class="setting">
+                    <label for="dfs">DFS</label>
+                    <input type="radio" name="alg" id="dfs">
+                </div>
+                <div class="setting">
+                    <label for="bfs">BFS</label>
+                    <input type="radio" name="alg" id="bfs">
+                </div>
+                <div class="setting">
+                    <label for="dijkstra">Dijkstra's</label>
+                    <input type="radio" name="alg" id="dijkstra">
+                </div>
+                <div class="setting">
+                    <label for="astar">A-Star</label>
+                        
+                    <input type="radio" name="alg" id="astar">
+                </div>
+
+                <div class="btns">
+                    <button id="solve">Solve</button>
+                </div>
+            </div>
+
+        </div> 
+    </div>
+    <script src="Cell.js"></script>
+    <script src="script.js"></script>
+    <script>
+
+        const arrow = document.querySelector(".right .back-arrow");
+        const mazeParameters = document.querySelector(".right .maze-parameters");
+        const solvingAlgorithms = document.querySelector(".right .solving-algorithms");
+
+        arrow.addEventListener("click", (e) => {
+            solvingAlgorithms.classList.toggle("hidden");
+            mazeParameters.classList.toggle("hidden");
+            arrow.classList.toggle("rotate");
+        });
+    
+    </script>
+</body>
+</html>
