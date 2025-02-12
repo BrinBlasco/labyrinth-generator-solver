@@ -13,6 +13,7 @@ const drawLine = (ctx, xc, yc, xd, yd, color="#D8E1E9", strokeWidth = 2) => {
     ctx.beginPath();
     ctx.strokeStyle = color;
     ctx.lineWidth = strokeWidth;
+    ctx.lineJoin = "round";
     ctx.moveTo(xc, yc);
     ctx.lineTo(xd, yd);
     ctx.stroke();
@@ -68,23 +69,32 @@ const removeWalls = (curr, next) => {
     let x = curr.c - next.c;
     let y = curr.r - next.r;
     
-    if(x === 1){ // to the right
+    if(x == 1){ // to the right
         curr.walls.left = false;
         next.walls.right = false;
 
-    } else if (x === -1) {        
+    } else if (x == -1) {        
         curr.walls.right = false;
         next.walls.left = false;
     }
 
-    if(y === 1){
+    if(y == 1){
         curr.walls.top = false;
         next.walls.bottom = false;
 
-    } else if (y === -1) {
+    } else if (y == -1) {
         curr.walls.bottom = false;
         next.walls.top = false;
     }
+};
+
+const highlightPath = (ctx, node, color="#0f0") => {
+    setInterval(() => {
+        if(node.parent){
+            node.parent.drawPath(ctx, node, color);
+            node = node.parent;
+        }
+    }, 0);
 };
 
 function setIntervalAwaitable(callback, interval){
@@ -121,7 +131,7 @@ const generateMaze = async (rows, cols, cell_size, framerate) => {
     current.visited = true;
 
     stack = [];
-
+    
     await setIntervalAwaitable(() => {
         
         let next = current.randomNeighbor(grid, ROWS, COLS);
@@ -146,7 +156,7 @@ const generateMaze = async (rows, cols, cell_size, framerate) => {
             if (stack.length == 0){
                 for(let i = 0; i < grid.length; i++){
                     grid[i].visited = false;
-                }
+                } // resetVisited()
 
                 grid[0].highlight(ctx, true, "#B3C5D7");
                 grid[grid.length-1].highlight(ctx, true, "#B3C5D7");
@@ -170,19 +180,27 @@ const generateMaze = async (rows, cols, cell_size, framerate) => {
 
     await setIntervalAwaitable(() => {
         if (stack.length > 0){
+
             v = stack.pop();
+
             if (v.visited) return false;
             v.visited = true;
-            if (v.r == dest.r && v.c == dest.c){
-                return true;
-            }
-
-            for(let w of v.getNeighbors(grid,rows,cols)){
+    
+            let w;
+            for(w of v.getNeighbors(grid,rows,cols)){
                 if (w.visited) continue;
-                v.drawPath(ctx, w);
+
+                w.parent = v;
                 stack.push(w)
             }
 
+            if (v.parent) v.parent.drawPath(ctx, v);
+
+            if (v.r == dest.r && v.c == dest.c){
+                highlightPath(ctx, v);
+                return true;
+            }
+            
 
         }
     }, FRAME_RATE);
@@ -205,6 +223,13 @@ const main = () => {
     //rows,  cols,  cellsize, fps
     let defaultValues = [10, 10, 50, 0];
 
+    // let defaultValues = {
+    //     rows : 10,
+    //     cols : 10,
+    //     cellsize : 50,
+    //     fps: 0
+    // };
+
     let dispFields = [rowsField, colsField, cellField, frameField];
 
     let arrow = document.querySelector(".back-arrow");
@@ -214,6 +239,7 @@ const main = () => {
         el.addEventListener("input", (e) => {
             dispFields[i].textContent = e.target.value;
             defaultValues[i] = parseInt(e.target.value);
+            //defaultValues[Object.keys(defaultValues)[i]] = parseInt(e.target.value);
         });
     });
 
@@ -225,6 +251,29 @@ const main = () => {
 
         let output = await generateMaze(...Object.values(defaultValues));
         generateButton.disabled = false;
+
+
+        
+        let maze = document.querySelector(".maze");
+        let cellR;
+        let cellY;
+
+        maze.addEventListener("click", function (e) {
+            let bounds = e.target.getBoundingClientRect();
+
+            let x = e.clientX - bounds.left;
+            let y = e.clientY - bounds.top;
+
+            cellR = x;
+            cellC = y;
+            console.log(x, y);
+            
+            let row = Math.ceil(y / 50) - 1;
+            let column = Math.ceil(x / 50) - 1;
+
+            let index = column + row * 10;
+            console.log(index, row, column);
+        });
 
         solveButton.addEventListener("click", () => {
             solveMaze(output);

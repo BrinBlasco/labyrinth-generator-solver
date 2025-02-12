@@ -34,17 +34,6 @@ class Cell {
         }
     }
 
-    drawPath(ctx, next){
-        let w = this.w;
-        let x1 = this.c * w + w / 2;
-        let y1 = this.r * w + w / 2; 
-        
-        let x2 = next.r * w + w / 2;
-        let y2 = next.c * w + w / 2;
-
-        drawLine(ctx, x1, y1, x2, y2, "#000", w-2);
-    }
-
     randomNeighbor(grid, rows, cols){
         
         let neighbors = [];
@@ -61,7 +50,6 @@ class Cell {
                 neighbors.push(cell);
             }
         });
-
         
         if (neighbors.length > 0){
             let r = Math.floor(Math.random()*neighbors.length);
@@ -70,6 +58,20 @@ class Cell {
             return null;
         }
 
+    }
+
+    drawPath(ctx, next, color="#000"){
+        let w = this.w;
+        let x1 = this.c * w;
+        let y1 = this.r * w; 
+        
+        let x2 = next.c * w;
+        let y2 = next.r * w;
+
+        let lineWidth = w-20;
+        drawLine(ctx, x1+w/2, y1+w/2, x2+w/2, y2+w/2, color, lineWidth);
+        drawRect(ctx, x2+w/2-lineWidth/2, y2+w/2-lineWidth/2, lineWidth, lineWidth, color);
+        drawRect(ctx, x1+w/2-lineWidth/2, y1+w/2-lineWidth/2, lineWidth, lineWidth, color);
     }
 
     getNeighbors(grid, rows, cols){
@@ -100,4 +102,5 @@ class Cell {
             drawRect(ctx, x, y, w, w, color);        
         }
     }
+    
 }
