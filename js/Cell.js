@@ -34,7 +34,7 @@ class Cell {
         }
     }
 
-    removeWalls (next) {
+    removeWalls(next) {
         let x = this.c - next.c;
         let y = this.r - next.r;
         

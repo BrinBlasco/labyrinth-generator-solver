@@ -6,18 +6,16 @@ class Maze {
         this.rows = rows;
         this.cols = cols;
         this.cellsize = cellsize;
-        this.framerate = 1000/(framerate+1);
+        this.framerate = 1000/framerate;
 
         this.width = this.cols * cellsize;
         this.height = this.rows * cellsize;
         
         this.ctx = this.initCanvas();
         this.grid = this.initGrid();
-
-        this.startPosition = 0;
     }
 
-    initCanvas() {
+    initCanvas(){
         this.destroyCanvas();
         const left = document.querySelector(".main .left .maze");
         const cnv = document.createElement("canvas");
@@ -33,18 +31,17 @@ class Maze {
         return ctx;
     }
 
-    destroyCanvas() {
+    destroyCanvas(){
         document.querySelectorAll("canvas").forEach(e => {
             e.remove();
         });
     }
 
-    initGrid() {
+    initGrid(){
         let grid = [];
         for(let r = 0; r < this.rows; r++){
             for(let c = 0; c < this.cols; c++){
                 let cell = new Cell(r, c, this.cellsize);
-                
                 grid.push(cell);
                 cell.show(this.ctx);
             } 
@@ -52,7 +49,19 @@ class Maze {
         return grid;
     }
 
-    index(r, c) {
+    refreshGrid(...kwargs){
+        if (kwargs.length != 0) {
+            kwargs.forEach(cell => {
+                cell.show(this.ctx);
+            })
+            return;
+        }
+        for(let i = 0; i < this.grid.length; i++){
+            this.grid[i].show(this.ctx);
+        }
+    }
+
+    index(r, c){
         if(r < 0 || c < 0 || c > this.cols - 1 || r > this.rows - 1) return -1;
         return c + r * this.cols;
     }
@@ -68,7 +77,7 @@ class Maze {
             let idx = this.index(cell.r+dir[0], cell.c+dir[1]);
             if(idx == -1) return;
 
-            let nextCell = grid[idx];
+            let nextCell = this.grid[idx];
             if(!nextCell.visited){
                 neighbors.push(nextCell);
             }
@@ -83,33 +92,27 @@ class Maze {
 
     }
 
-    getNeighbors(cell, all=false){
+    getNeighbors(cell, ignoreWalls = false){
+        
         let neighbors = [];
-        const [top, right, bottom, left] = Object.values(cell.walls);
+        
+        const walls = Object.values(cell.walls);
 
-        let cellTop    = this.grid[this.index( cell.r-1, cell.c,  )];
-        let cellRight  = this.grid[this.index( cell.r,   cell.c+1 )];
-        let cellBottom = this.grid[this.index( cell.r+1, cell.c,  )];
-        let cellLeft   = this.grid[this.index( cell.r,   cell.c-1 )];
+        const directions = [ // directions, u,r,d,l
+            [-1,  0], [ 0,  1],
+            [ 1,  0], [ 0, -1]
+        ];
 
-        if(all){
+        directions.forEach(([dr, dc], i) => {
+            let idx = this.index(cell.r + dr, cell.c + dc);
+            if(idx == -1) return;
 
-            if(top && !cellTop?.visited)       
-                neighbors.push(cellTop);
-            if(right && !cellRight?.visited)   
-                neighbors.push(cellRight);
-            if(bottom && !cellBottom?.visited) 
-                neighbors.push(cellBottom);
-            if(left && !cellLeft?.visited)     
-                neighbors.push(cellLeft);
-
-            return neighbors.filter((el) => el != null);
-        }
-
-        if(!top    && !cellTop.visited)    neighbors.push(cellTop);
-        if(!right  && !cellRight.visited)  neighbors.push(cellRight);
-        if(!bottom && !cellBottom.visited) neighbors.push(cellBottom);
-        if(!left   && !cellLeft.visited)   neighbors.push(cellLeft);
+            let nextCell = this.grid[idx];
+            
+            if(!nextCell.visited && (ignoreWalls || !walls[i])){
+                neighbors.push(nextCell);
+            }
+        });
 
         return neighbors;
     }
@@ -122,39 +125,33 @@ class Maze {
 
     async generateMaze(initialIndex){
 
-        this.startPosition = initialIndex;
-
         let next;
+        let neighbors;
         let stack = [];
-        let neighbors = [];
         let curr = this.grid[initialIndex];
         curr.visited = true;
-
 
         await setIntervalAwaitable(() => {
 
             neighbors = this.getNeighbors(curr, true);
-            console.log(neighbors);
-            next = neighbors[Math.round(Math.random()*neighbors.length)];
-
-
+            next = neighbors[parseInt(Math.random()*neighbors.length)];
+            
             if(next){
 
                 next.visited = true;
                 
                 stack.push(curr);
-                console.log(stack);
 
                 curr.removeWalls(next);
-                curr.show(this.ctx);
+                this.refreshGrid();
+
                 curr = next;
-//TUKEJ REMOVE WALLS NOT DEFINED BLAH BLAH BLAH
+
                 return false;
 
             } else if (stack.length >= 0){
 
                 if(stack.length == 0) {
-                    this.resetVisited();
 
                     this.resetVisited();
                     this.grid[initialIndex].highlight(this.ctx, true, "#B3C5D7");
@@ -170,6 +167,8 @@ class Maze {
                 curr = stack.pop();
                 return false;
             }
+            
+            //this.refreshGrid(curr, next);
 
         },this.framerate);
     };

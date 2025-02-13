@@ -6,48 +6,69 @@ let frameField = document.querySelector("#framerateDisp");
 let dispFields = [rowsField, colsField, cellField, frameField];
 
 let defaultValues = {
-    rows : 10,
-    cols : 10,
+    rows : 15, 
+    cols : 15,
     cellsize : 50,
     fps: 0
 };
+let step = 0;
+document.querySelectorAll('input[type="range"]').forEach((el, i) => {
+    el.addEventListener("input", (e) => {
+        dispFields[i].textContent = e.target.value;
+        defaultValues[Object.keys(defaultValues)[i]] = parseInt(e.target.value);
+        step = 0;
+    }); 
+});
 
-const algs = Object.freeze({
-    DFS : "dfs"
-})
 
 const arrow = document.querySelector(".right .back-arrow");
+const generateButton = document.querySelector("#generate");
 const mazeParameters = document.querySelector(".right .maze-parameters");
 const solvingAlgorithms = document.querySelector(".right .solving-algorithms");
 
-arrow.addEventListener("click", (e) => {
+arrow.style.display = "none";
+arrow.addEventListener("click", () => {
     solvingAlgorithms.classList.toggle("hidden");
     mazeParameters.classList.toggle("hidden");
     arrow.classList.toggle("rotate");
 });
-arrow.style.display = "none";
+
+let maze;
+generateButton.addEventListener("click", () => {
+    maze = new Maze(...Object.values(defaultValues));
+}, {once: true});
 
 
-document.querySelectorAll('input[type="range"]').forEach((el, i) => {
-    el.addEventListener("input", (e) => {
-        dispFields[i].textContent = e.target.value;
-        //defaultValues[i] = parseInt(e.target.value);
-        defaultValues[Object.keys(defaultValues)[i]] = parseInt(e.target.value);
-    });
-});
+let promise = null;
+let storedResolveFunc = null;
+let lastClickedPosition = 0;
 
-document.querySelector("#generate").addEventListener("click", async (e) => {
+generateButton.addEventListener("click", async (e) => {
+    
+    let maze = new Maze(...Object.values(defaultValues));
 
-    let generateButton = document.querySelector("#generate");
-    let solveButton = document.querySelector("#solve");
+    if (!promise) {
+        promise = getClickedCell();
+        console.log("Waiting for click...");
+
+    } else {
+        if (storedResolveFunc){
+            storedResolveFunc(lastClickedPosition);
+        } else {
+            console.log("No click detected.");
+
+            storedResolveFunc = (pos) => console.log(pos);
+            storedResolveFunc(0);
+        }
+    }
 
     generateButton.disabled = true;
-    let maze = new Maze(...Object.values(defaultValues));
-    maze.generateMaze(0); // pogrunti za starting position kku nastimat
+    await maze.generateMaze(lastClickedPosition);
     generateButton.disabled = false;
 
+    let solveButton = document.querySelector("#solve");
     solveButton.addEventListener("click", () => {
-        let alg = document.querySelector("input[name='alg']:checked").value;
+        let alg = document.querySelector("input[name='alg']:checked")?.value || "default";
         solveButton.disabled = true;
 
         switch (alg) {
@@ -71,26 +92,37 @@ document.querySelector("#generate").addEventListener("click", async (e) => {
         solveButton.disabled = false;
         
     });
+    
+    promise = null;
+    storedResolveFunc = null;
+    lastClickedPosition = 0;
 
-    // let maze = document.querySelector(".maze");
-    // let cellR;
-    // let cellY;
 
-    // maze.addEventListener("click", function (e) {
-    //     let bounds = e.target.getBoundingClientRect();
-
-    //     let x = e.clientX - bounds.left;
-    //     let y = e.clientY - bounds.top;
-
-    //     cellR = x;
-    //     cellC = y;
-    //     console.log(x, y);
-        
-    //     let row = Math.ceil(y / 50) - 1;
-    //     let column = Math.ceil(x / 50) - 1;
-
-    //     let index = column + row * 10;
-    //     console.log(index, row, column);
-    // });
 
 });
+
+const getClickedCell = () => {
+    let promise;
+
+    promise = new Promise((res, rej) => {
+        const maze = document.querySelector(".maze");
+        maze.addEventListener("click", (e) => {
+            let bounds = e.target.getBoundingClientRect();
+
+            let x = e.clientX - bounds.left;
+            let y = e.clientY - bounds.top;
+            
+            let row = Math.ceil(y / defaultValues.cellsize) - 1;
+            let column = Math.ceil(x / defaultValues.cellsize) - 1;
+
+            //let startIndex = column + row * defaultValues.cols;
+            lastClickedPosition = column + row * defaultValues.cols;
+            
+            console.log("Stored position: ", lastClickedPosition);
+            storedResolve = res;
+        });
+    });
+    
+    return promise;
+};
+    
