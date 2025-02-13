@@ -6,7 +6,7 @@ class Maze {
         this.rows = rows;
         this.cols = cols;
         this.cellsize = cellsize;
-        this.framerate = 1000/framerate;
+        this.framerate = 1000/(framerate+1);
 
         this.width = this.cols * cellsize;
         this.height = this.rows * cellsize;
@@ -145,10 +145,10 @@ class Maze {
                 stack.push(curr);
                 console.log(stack);
 
-                removeWalls(curr, next);
-
+                curr.removeWalls(next);
+                curr.show(this.ctx);
                 curr = next;
-
+//TUKEJ REMOVE WALLS NOT DEFINED BLAH BLAH BLAH
                 return false;
 
             } else if (stack.length >= 0){
@@ -171,13 +171,13 @@ class Maze {
                 return false;
             }
 
-        }, 1000);
+        },this.framerate);
     };
 
     solveMazeDfs(){
         console.log("Solving with Dfs...");
         
-        let stack = []
+        let stack = [];
         let curr = this.grid[0];
         let dest = this.grid[this.grid.length-1];
         stack = [curr];

@@ -34,6 +34,29 @@ class Cell {
         }
     }
 
+    removeWalls (next) {
+        let x = this.c - next.c;
+        let y = this.r - next.r;
+        
+        if(x == 1){ // to the right
+            this.walls.left = false;
+            next.walls.right = false;
+
+        } else if (x == -1) {        
+            this.walls.right = false;
+            next.walls.left = false;
+        }
+
+        if(y == 1){
+            this.walls.top = false;
+            next.walls.bottom = false;
+
+        } else if (y == -1) {
+            this.walls.bottom = false;
+            next.walls.top = false;
+        }
+    }
+
     randomNeighbor(grid, rows, cols){
         
         let neighbors = [];
