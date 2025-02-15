@@ -35,33 +35,29 @@ arrow.addEventListener("click", () => {
 });
 
 
-
-let promise = null;
-let storedResolveFunc = null;
-let lastClickedPosition = 0;
+let dragging;
+let startingIndex = 0;
+let maze = new Maze(...Object.values(defaultValues));
 
 generateButton.addEventListener("click", async (e) => { 
-    
-    let maze = new Maze(...Object.values(defaultValues));
+    if (step == 0){
+        maze.initCanvas("overlay");
+        maze.initCanvas("grid");
+        maze.initGrid();
+        maze.initDragger();
 
-    // if (!promise) {
-    //     promise = getClickedCell();
-    //     console.log("Waiting for click...");
-
-    // } else {
-    //     if (storedResolveFunc){
-    //         storedResolveFunc(lastClickedPosition);
-    //     } else {
-    //         console.log("No click detected.");
-
-    //         storedResolveFunc = (pos) => console.log(pos);
-    //         storedResolveFunc(0);
-    //     }
-    // }
-    // await promise;
+        maze.dragger.addSquare(0);
+        maze.dragger.enableDragging();
+        
+        step++;
+        return;
+    }
+    dragging.disableDragging();
+    startingIndex = dragging.squares.at(0).index;
+    dragging.reset();
 
     generateButton.disabled = true;
-    await maze.generateMaze(lastClickedPosition);
+    await maze.generateMaze(startingIndex);
     generateButton.disabled = false;
 
     let solveButton = document.querySelector("#solve");
@@ -99,38 +95,31 @@ generateButton.addEventListener("click", async (e) => {
         maze.sctx.reset();
         clearButton.disabled = true;
     });
-    
-
-
-
-    // promise = null;
-    // storedResolveFunc = null;
-    // lastClickedPosition = 0;
 
 });
 
-const getClickedCell = () => {
-    let promise;
+// const getClickedCell = () => {
+//     let promise;
 
-    promise = new Promise((res, rej) => {
-        const maze = document.querySelector(".maze");
-        maze.addEventListener("click", (e) => {
-            let bounds = e.target.getBoundingClientRect();
+//     promise = new Promise((res, rej) => {
+//         const maze = document.querySelector(".maze");
+//         maze.addEventListener("click", (e) => {
+//             let bounds = e.target.getBoundingClientRect();
 
-            let x = e.clientX - bounds.left;
-            let y = e.clientY - bounds.top;
+//             let x = e.clientX - bounds.left;
+//             let y = e.clientY - bounds.top;
             
-            let row = Math.ceil(y / defaultValues.cellsize) - 1;
-            let column = Math.ceil(x / defaultValues.cellsize) - 1;
+//             let row = Math.ceil(y / defaultValues.cellsize) - 1;
+//             let column = Math.ceil(x / defaultValues.cellsize) - 1;
 
-            //let startIndex = column + row * defaultValues.cols;
-            lastClickedPosition = column + row * defaultValues.cols;
+//             //let startIndex = column + row * defaultValues.cols;
+//             lastClickedPosition = column + row * defaultValues.cols;
             
-            console.log("Stored position: ", lastClickedPosition);
-            storedResolveFunc = res;
-        });
-    });
+//             console.log("Stored position: ", lastClickedPosition);
+//             storedResolveFunc = res;
+//         });
+//     });
     
-    return promise;
-};
+//     return promise;
+// };
     

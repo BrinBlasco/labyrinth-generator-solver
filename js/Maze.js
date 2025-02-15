@@ -9,9 +9,10 @@ class Maze {
         this.width = this.cols * cellsize;
         this.height = this.rows * cellsize;
         
-        this.sctx = this.initCanvas("cnvOv");
-        this.ctx = this.initCanvas("cnv");
-        this.grid = this.initGrid();
+        this.ctx = {}; //this.sctx = null; //this.initCanvas("cnvOv"); //this.ctx = null; //this.initCanvas("cnv");
+        this.grid = null; //this.initGrid();
+        
+        this.dragger = null;
     }
 
     initCanvas(id){
@@ -19,21 +20,24 @@ class Maze {
         const left = document.querySelector(".main .left .maze");
         const cnv = document.createElement("canvas");
 
+        cnv.id = id;
         cnv.width = this.width;
         cnv.height = this.height;
-        cnv.id = `${id}`;
 
         const ctx = cnv.getContext("2d");
-        ctx.globalAlpha = 1.0;
-        ctx.globalCompositeOperation = "source-over";
-        ctx.shadowBlur = 0;
-        ctx.shadowColor = "transparent";
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
+        Object.assign(ctx, {
+            globalAlpha : 1.0,
+            globalCompositeOperation : "source-over",
+            shadowBlur : 0,
+            shadowColor : "transparent",
+            imageSmoothingEnabled : true,
+            imageSmoothingQuality : "high"
+        })
         
         left.appendChild(cnv);
-        
-        return ctx;
+
+        this.ctx[id] = ctx;
+        //return ctx;
     }
 
     destroyCanvas(id){
@@ -53,10 +57,18 @@ class Maze {
             for(let c = 0; c < this.cols; c++){
                 let cell = new Cell(r, c, this.cellsize);
                 grid.push(cell);
-                cell.show(this.ctx);
+                cell.show(this.ctx["grid"]);
             } 
         }
-        return grid;
+        this.grid = grid;
+        //return grid;
+    }
+
+    initDragger(){
+        console.log(this.sctx);
+        let dragger = new Dragger(this.sctx, this.rows, this.cols, this.cellsize);
+        this.dragger = dragger;
+        return dragger;
     }
 
     refreshGrid(...kwargs){
