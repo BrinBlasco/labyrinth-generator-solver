@@ -1,8 +1,6 @@
 
 class Maze {
-    constructor(
-        rows, cols, cellsize, framerate
-    ) {
+    constructor(rows, cols, cellsize, framerate) {
         this.rows = rows;
         this.cols = cols;
         this.cellsize = cellsize;
@@ -11,30 +9,42 @@ class Maze {
         this.width = this.cols * cellsize;
         this.height = this.rows * cellsize;
         
-        this.ctx = this.initCanvas();
+        this.sctx = this.initCanvas("cnvOv");
+        this.ctx = this.initCanvas("cnv");
         this.grid = this.initGrid();
     }
 
-    initCanvas(){
-        this.destroyCanvas();
+    initCanvas(id){
+        this.destroyCanvas(id);
         const left = document.querySelector(".main .left .maze");
         const cnv = document.createElement("canvas");
 
         cnv.width = this.width;
         cnv.height = this.height;
-        cnv.id = "cnv";
-
-        left.appendChild(cnv);
+        cnv.id = `${id}`;
 
         const ctx = cnv.getContext("2d");
+        ctx.globalAlpha = 1.0;
+        ctx.globalCompositeOperation = "source-over";
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = "transparent";
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        
+        left.appendChild(cnv);
         
         return ctx;
     }
 
-    destroyCanvas(){
-        document.querySelectorAll("canvas").forEach(e => {
-            e.remove();
-        });
+    destroyCanvas(id){
+        if(id){
+            let cnv = document.querySelector(`#${id}`);
+            if(cnv) cnv.remove();
+        } else {
+            document.querySelectorAll("canvas").forEach(e => {
+                e.remove();
+            }); 
+        }
     }
 
     initGrid(){
@@ -123,6 +133,15 @@ class Maze {
         }
     }
 
+    highlightPath(cell){
+        setInterval(() => {
+            if(cell.parent){
+                cell.parent.drawPath(this.sctx, cell, "#bcc90c");
+                cell = cell.parent;
+            }
+        }, 0);
+    }
+
     async generateMaze(initialIndex){
 
         let next;
@@ -146,7 +165,7 @@ class Maze {
                 this.refreshGrid();
 
                 curr = next;
-
+                
                 return false;
 
             } else if (stack.length >= 0){
@@ -154,8 +173,8 @@ class Maze {
                 if(stack.length == 0) {
 
                     this.resetVisited();
-                    this.grid[initialIndex].highlight(this.ctx, true, "#B3C5D7");
-                    this.grid[this.grid.length-1].highlight(this.ctx, true, "#B3C57");
+                    this.grid[initialIndex].highlight(this.sctx, true, "#B3C5D7");
+                    this.grid[this.grid.length-1].highlight(this.sctx, true, "#B3C57");
 
                     let arrow = document.querySelector(".back-arrow");
                     arrow.style.display = "flex";
@@ -168,49 +187,84 @@ class Maze {
                 return false;
             }
             
-            //this.refreshGrid(curr, next);
 
         },this.framerate);
+
     };
 
     solveMazeDfs(){
         console.log("Solving with Dfs...");
+        this.sctx.reset();
+        this.resetVisited();
         
         let stack = [];
         let curr = this.grid[0];
         let dest = this.grid[this.grid.length-1];
-        stack = [curr];
+        stack.push(curr);
+        
 
         setIntervalAwaitable(() => {
             if (stack.length > 0){
 
-                v = stack.pop();
+                let v = stack.pop();
 
                 if (v.visited) return false;
                 v.visited = true;
         
                 let w;
-                for(w of v.getNeighbors(grid,rows,cols)){
+                for(w of this.getNeighbors(v)){
                     if (w.visited) continue;
-
                     w.parent = v;
                     stack.push(w)
                 }
 
-                if (v.parent) v.parent.drawPath(ctx, v);
+                if (v.parent) v.parent.drawPath(this.sctx, v);
 
                 if (v.r == dest.r && v.c == dest.c){
-                    //highlightPath(ctx, v);
+                    this.highlightPath(v);
                     return true;
                 }
-                
-
             }
+            return false;
+
         }, this.framerate);
     }
 
     solveMazeBfs(){
-        console.log("Solving with Bfs..."); 
+        console.log("Solving with Bfs...");
+        this.sctx.reset();
+        this.resetVisited();
+
+        let queue = [];
+        let curr = this.grid[0];
+        let dest = this.grid[this.grid.length-1];
+        queue.push(curr);
+
+        setIntervalAwaitable(() => {
+            if (queue.length > 0){
+
+                let v = queue.shift();
+
+                if (v.visited) return false;
+                v.visited = true;
+        
+                let w;
+                for(w of this.getNeighbors(v)){
+                    if (w.visited) continue;
+                    w.parent = v;
+                    queue.push(w)
+                }
+
+                if (v.parent) v.parent.drawPath(this.sctx, v);
+
+                if (v.r == dest.r && v.c == dest.c){
+                    this.highlightPath(v);
+                    return true;
+                }
+            }
+            return false;
+
+        }, this.framerate);
     }
 
     solveMazeDijkstra(){

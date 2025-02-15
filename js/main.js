@@ -6,11 +6,12 @@ let frameField = document.querySelector("#framerateDisp");
 let dispFields = [rowsField, colsField, cellField, frameField];
 
 let defaultValues = {
-    rows : 15, 
-    cols : 15,
+    rows : 10, 
+    cols : 10,
     cellsize : 50,
     fps: 0
 };
+
 let step = 0;
 document.querySelectorAll('input[type="range"]').forEach((el, i) => {
     el.addEventListener("input", (e) => {
@@ -33,44 +34,45 @@ arrow.addEventListener("click", () => {
     arrow.classList.toggle("rotate");
 });
 
-let maze;
-generateButton.addEventListener("click", () => {
-    maze = new Maze(...Object.values(defaultValues));
-}, {once: true});
 
 
 let promise = null;
 let storedResolveFunc = null;
 let lastClickedPosition = 0;
 
-generateButton.addEventListener("click", async (e) => {
+generateButton.addEventListener("click", async (e) => { 
     
     let maze = new Maze(...Object.values(defaultValues));
 
-    if (!promise) {
-        promise = getClickedCell();
-        console.log("Waiting for click...");
+    // if (!promise) {
+    //     promise = getClickedCell();
+    //     console.log("Waiting for click...");
 
-    } else {
-        if (storedResolveFunc){
-            storedResolveFunc(lastClickedPosition);
-        } else {
-            console.log("No click detected.");
+    // } else {
+    //     if (storedResolveFunc){
+    //         storedResolveFunc(lastClickedPosition);
+    //     } else {
+    //         console.log("No click detected.");
 
-            storedResolveFunc = (pos) => console.log(pos);
-            storedResolveFunc(0);
-        }
-    }
+    //         storedResolveFunc = (pos) => console.log(pos);
+    //         storedResolveFunc(0);
+    //     }
+    // }
+    // await promise;
 
     generateButton.disabled = true;
     await maze.generateMaze(lastClickedPosition);
     generateButton.disabled = false;
 
     let solveButton = document.querySelector("#solve");
+    let clearButton = document.querySelector("#clear");
+    
+    clearButton.disabled = true;
     solveButton.addEventListener("click", () => {
+
         let alg = document.querySelector("input[name='alg']:checked")?.value || "default";
         solveButton.disabled = true;
-
+        
         switch (alg) {
             case "dfs":
                 maze.solveMazeDfs();
@@ -90,14 +92,20 @@ generateButton.addEventListener("click", async (e) => {
         }
 
         solveButton.disabled = false;
-        
+        clearButton.disabled = false;
+    });
+
+    clearButton.addEventListener("click", () => {
+        maze.sctx.reset();
+        clearButton.disabled = true;
     });
     
-    promise = null;
-    storedResolveFunc = null;
-    lastClickedPosition = 0;
 
 
+
+    // promise = null;
+    // storedResolveFunc = null;
+    // lastClickedPosition = 0;
 
 });
 
@@ -119,7 +127,7 @@ const getClickedCell = () => {
             lastClickedPosition = column + row * defaultValues.cols;
             
             console.log("Stored position: ", lastClickedPosition);
-            storedResolve = res;
+            storedResolveFunc = res;
         });
     });
     

@@ -24,19 +24,29 @@ const initCanvas = (width, height) => {
 
     const left = document.querySelector(".main .left .maze");
     const cnv = document.createElement("canvas");
+
     cnv.width = width;
     cnv.height = height;
     cnv.id = "cnv";
+    
+    const cnvOv = document.createElement("canvas");
+    cnvOv.width = width;
+    cnvOv.height = height;
+    cnv.id = "cnvOv"
+
+
     left.appendChild(cnv);
+    left.appendChilc(cnvOv);
+    
     const ctx = cnv.getContext("2d");
 
     return [cnv, ctx];
 };
 
-const destroyCanvas = () => {
-    document.querySelectorAll("canvas").forEach(e => {
+const destroyCanvas = (id) => {
+    document.querySelectorAll(`canvas ${id}`).forEach(e => {
         e.remove();
-    })
+    });
 };
 
 const initGrid = (ctx, rows, cols, cell_size) => {

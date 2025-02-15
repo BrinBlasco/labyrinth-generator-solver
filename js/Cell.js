@@ -83,20 +83,6 @@ class Cell {
 
     }
 
-    drawPath(ctx, next, color="#000"){
-        let w = this.w;
-        let x1 = this.c * w;
-        let y1 = this.r * w; 
-        
-        let x2 = next.c * w;
-        let y2 = next.r * w;
-
-        let lineWidth = w-20;
-        drawLine(ctx, x1+w/2, y1+w/2, x2+w/2, y2+w/2, color, lineWidth);
-        drawRect(ctx, x2+w/2-lineWidth/2, y2+w/2-lineWidth/2, lineWidth, lineWidth, color);
-        drawRect(ctx, x1+w/2-lineWidth/2, y1+w/2-lineWidth/2, lineWidth, lineWidth, color);
-    }
-
     getNeighbors(grid, rows, cols){
         let neighbors = [];
         const [top, right, bottom, left] = Object.values(this.walls);
@@ -120,10 +106,27 @@ class Cell {
         let y = this.r * w;
         
         if(small){
-            drawRect(ctx,x+w/2-w/10,y+w/2-w/10,w/5,w/5, color); //rgb(100,0,100)
+            drawRect(ctx,    x + w/2 - w/8,    y + w/2 - w/8,    w/4,    w/4,    color); //rgb(100,0,100)
         } else {
             drawRect(ctx, x, y, w, w, color);        
         }
     }
-    
+
+    drawPath(ctx, next, color="#000"){
+        let w = this.w;
+        let x1 = this.c * w;
+        let y1 = this.r * w; 
+        
+        let x2 = next.c * w;
+        let y2 = next.r * w;
+
+        let lineWidth = w-20;
+
+        drawLine(ctx, x1+w/2, y1+w/2, x2+w/2, y2+w/2, color, lineWidth);
+
+        drawRect(ctx, x1+w/2-lineWidth/2, y1+w/2-lineWidth/2, lineWidth, lineWidth, color);
+        drawRect(ctx, x2+w/2-lineWidth/2, y2+w/2-lineWidth/2, lineWidth, lineWidth, color);
+          
+    }
+
 }
