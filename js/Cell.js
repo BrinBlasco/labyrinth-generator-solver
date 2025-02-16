@@ -6,6 +6,7 @@ class Cell {
         this.c = c;
         this.w = w;
         this.visited = false;
+        this.parent = null;
 
         this.walls = {
             top: true,

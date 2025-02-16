@@ -16,13 +16,13 @@ html, body {
 }
 
 /* Canvas */
-#cnv {
+canvas#grid {
     /* background-color: rgb(50, 50, 50); */
     background-color: #C5D5EA;
     border: 2px solid black;
 }
 
-#cnvOv {
+canvas#overlay {
     border: 2px solid black;
     position: absolute;
     top: 0;

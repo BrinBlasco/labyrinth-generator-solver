@@ -1,9 +1,9 @@
-let rowsField = document.querySelector("#numrowsDisp");
-let colsField = document.querySelector("#numcolsDisp");
-let cellField = document.querySelector("#cellsizeDisp");
-let frameField = document.querySelector("#framerateDisp");
+const rowsField = document.querySelector("#numrowsDisp");
+const colsField = document.querySelector("#numcolsDisp");
+const cellField = document.querySelector("#cellsizeDisp");
+const frameField = document.querySelector("#framerateDisp");
 
-let dispFields = [rowsField, colsField, cellField, frameField];
+const dispFields = [rowsField, colsField, cellField, frameField];
 
 let defaultValues = {
     rows : 10, 
@@ -26,6 +26,8 @@ const arrow = document.querySelector(".right .back-arrow");
 const generateButton = document.querySelector("#generate");
 const mazeParameters = document.querySelector(".right .maze-parameters");
 const solvingAlgorithms = document.querySelector(".right .solving-algorithms");
+const solveButton = document.querySelector("#solve");
+const clearButton = document.querySelector("#clear");
 
 arrow.style.display = "none";
 arrow.addEventListener("click", () => {
@@ -34,13 +36,12 @@ arrow.addEventListener("click", () => {
     arrow.classList.toggle("rotate");
 });
 
-
-let dragging;
 let startingIndex = 0;
-let maze = new Maze(...Object.values(defaultValues));
+let maze = null;
+generateButton.addEventListener("click", async (e) => {  
 
-generateButton.addEventListener("click", async (e) => { 
     if (step == 0){
+        maze = new Maze(...Object.values(defaultValues));
         maze.initCanvas("overlay");
         maze.initCanvas("grid");
         maze.initGrid();
@@ -52,22 +53,31 @@ generateButton.addEventListener("click", async (e) => {
         step++;
         return;
     }
-    dragging.disableDragging();
-    startingIndex = dragging.squares.at(0).index;
-    dragging.reset();
+    maze.dragger.disableDragging();
+
+    startingIndex = maze.dragger.squares.at(0)?.index || 0;
+    maze.dragger.reset();
 
     generateButton.disabled = true;
     await maze.generateMaze(startingIndex);
-    generateButton.disabled = false;
 
-    let solveButton = document.querySelector("#solve");
-    let clearButton = document.querySelector("#clear");
     
+    generateButton.disabled = false;
     clearButton.disabled = true;
+    solveButton.disabled = true;
+
+    document.querySelectorAll("input[name='alg']").forEach(rb => {
+        rb.addEventListener("change", () => {
+            solveButton.disabled = !document.querySelector("input[name='alg']:checked");
+        });
+    });
+
     solveButton.addEventListener("click", () => {
 
         let alg = document.querySelector("input[name='alg']:checked")?.value || "default";
         solveButton.disabled = true;
+
+        maze.ctx["overlay"].reset();
         
         switch (alg) {
             case "dfs":
@@ -89,37 +99,18 @@ generateButton.addEventListener("click", async (e) => {
 
         solveButton.disabled = false;
         clearButton.disabled = false;
+        maze.dragger.disableDragging();
     });
 
     clearButton.addEventListener("click", () => {
-        maze.sctx.reset();
+        maze.ctx["overlay"].reset();
         clearButton.disabled = true;
+        maze.resetVisited();
+        maze.dragger.reset();
+        maze.dragger.addSquare(0);
+        maze.dragger.addSquare(maze.grid.length-1);
+        maze.dragger.enableDragging();
     });
 
 });
-
-// const getClickedCell = () => {
-//     let promise;
-
-//     promise = new Promise((res, rej) => {
-//         const maze = document.querySelector(".maze");
-//         maze.addEventListener("click", (e) => {
-//             let bounds = e.target.getBoundingClientRect();
-
-//             let x = e.clientX - bounds.left;
-//             let y = e.clientY - bounds.top;
-            
-//             let row = Math.ceil(y / defaultValues.cellsize) - 1;
-//             let column = Math.ceil(x / defaultValues.cellsize) - 1;
-
-//             //let startIndex = column + row * defaultValues.cols;
-//             lastClickedPosition = column + row * defaultValues.cols;
-            
-//             console.log("Stored position: ", lastClickedPosition);
-//             storedResolveFunc = res;
-//         });
-//     });
-    
-//     return promise;
-// };
-    
+ 

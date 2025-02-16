@@ -4,11 +4,10 @@ class Dragger {
         this.rows = rows;
         this.cols = cols;
         this.cellSize = cellSize;
-        this.squares = [];  // Holds up to 2 squares
-        this.isDragging = null;  // Index of the square being dragged
+        this.squares = [];  
+        this.draggingIndex = null;
     }
 
-    // Add a square based on its 1D grid index
     addSquare = (index) => {
         if (this.squares.length >= 2) return;
 
@@ -17,29 +16,26 @@ class Dragger {
 
         const square = {
             index,
-            x: col * this.cellSize,
-            y: row * this.cellSize,
+            x: col * this.cellSize + this.cellSize/10,
+            y: row * this.cellSize + this.cellSize/10,
+            w: this.cellSize - this.cellSize / 5
         };
 
         this.squares.push(square);
-        console.log(this.ctx);
-        this.drawSquares();
-        
+        this.drawSquare(square, this.squares.length-1);
     };
 
-    // Draw squares on the canvas
-    drawSquares = () => {
-        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-        this.squares.forEach((square, i) => {
-            let color = i === 0 ? "blue" : "red";
-            this.ctx.fillStyle = color;
-            this.ctx.fillRect(square.x, square.y, this.cellSize, this.cellSize);
-        });
+    drawSquare = (square, index) => {
+        let color = index == 0 ? "blue" : "red"; // only 2 squares, first blue second red
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(square.x, square.y, square.w, square.w);
     };
 
-    // Event Handlers as arrow functions (automatically bind 'this')
+    clearSquareArea = (x, y, w) => {
+        this.ctx.clearRect(x, y, w, w);
+    };
+
     handleMouseDown = (e) => {
-        console.log("mousedown event triggered");
         const { offsetX, offsetY } = e;
 
         this.squares.forEach((square, i) => {
@@ -49,15 +45,13 @@ class Dragger {
                 offsetY >= square.y &&
                 offsetY <= square.y + this.cellSize
             ) {
-                console.log("Square selected for dragging:", i);
-                this.isDragging = i;
+                this.draggingIndex = i;
             }
         });
     };
 
     handleMouseMove = (e) => {
-        if (this.isDragging === null) return;
-        console.log("mousemove event triggered while dragging square", this.isDragging);
+        if (this.draggingIndex == null) return;
 
         const bounds = this.ctx.canvas.getBoundingClientRect();
         const x = e.clientX - bounds.left;
@@ -66,52 +60,60 @@ class Dragger {
         let row = Math.floor(y / this.cellSize);
         let col = Math.floor(x / this.cellSize);
 
-        // Ensure the square stays within grid bounds
         if (row < 0 || row >= this.rows || col < 0 || col >= this.cols) return;
 
-        // Update square position and index
-        this.squares[this.isDragging].x = col * this.cellSize;
-        this.squares[this.isDragging].y = row * this.cellSize;
-        this.squares[this.isDragging].index = row * this.cols + col;
+        const newIndex = row * this.cols + col;
 
-        this.drawSquares();
+        for(let i = 0; i < this.squares.length; i++){
+            if(i != this.draggingIndex && this.squares[i].index == newIndex) return;
+        }
+
+        let square = this.squares[this.draggingIndex];
+
+        const oldX = square.x;
+        const oldY = square.y;
+
+        square.x = col * this.cellSize + this.cellSize/10;
+        square.y = row * this.cellSize + this.cellSize/10;
+        square.index = newIndex;
+        
+        this.clearSquareArea(oldX, oldY, square.w);
+
+        this.drawSquare(square, this.draggingIndex);
+
     };
 
-    handleMouseUp = (e) => {
-        console.log("mouseup event triggered");
-        this.isDragging = null;
+    handleMouseUp = () => {
+        this.draggingIndex = null;
     };
 
-    handleMouseLeave = (e) => {
-        console.log("mouseleave event triggered");
-        this.isDragging = null;
+    handleMouseLeave = () => {
+        this.draggingIndex = null;
     };
 
-    // Enable dragging event listeners on the canvas
-    enableDragging() {
-        console.log("Enabling dragging events");
+    enableDragging = () => {
         const canvas = this.ctx.canvas;
         canvas.addEventListener("mousedown", this.handleMouseDown);
         canvas.addEventListener("mousemove", this.handleMouseMove);
         canvas.addEventListener("mouseup", this.handleMouseUp);
         canvas.addEventListener("mouseleave", this.handleMouseLeave);
-    }
+    };
 
-    // Remove event listeners
-    disableDragging() {
-        console.log("Disabling dragging events");
+    disableDragging = () => {
         const canvas = this.ctx.canvas;
         canvas.removeEventListener("mousedown", this.handleMouseDown);
         canvas.removeEventListener("mousemove", this.handleMouseMove);
         canvas.removeEventListener("mouseup", this.handleMouseUp);
         canvas.removeEventListener("mouseleave", this.handleMouseLeave);
-    }
+    };
 
-    // Clear all squares and remove event listeners
-    reset() {
+    reset = () => {
+        //this.squares.forEach(sq => {
+        //    this.ctx.clearRect(sq.x, sq.y, sq.w, sq.w);
+        //});
+        this.ctx.reset();
         this.squares = [];
         this.isDragging = null;
-        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.disableDragging();
-    }
+    };
 }

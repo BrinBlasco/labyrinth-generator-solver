@@ -1,6 +1,6 @@
 
 class Maze {
-    constructor(rows, cols, cellsize, framerate) {
+    constructor (rows, cols, cellsize, framerate){
         this.rows = rows;
         this.cols = cols;
         this.cellsize = cellsize;
@@ -9,13 +9,14 @@ class Maze {
         this.width = this.cols * cellsize;
         this.height = this.rows * cellsize;
         
-        this.ctx = {}; //this.sctx = null; //this.initCanvas("cnvOv"); //this.ctx = null; //this.initCanvas("cnv");
-        this.grid = null; //this.initGrid();
-        
+        this.ctx = {};
+        this.grid = null;
         this.dragger = null;
+        
+        this.genStart = null;
     }
 
-    initCanvas(id){
+    initCanvas = (id) => {
         this.destroyCanvas(id);
         const left = document.querySelector(".main .left .maze");
         const cnv = document.createElement("canvas");
@@ -37,10 +38,9 @@ class Maze {
         left.appendChild(cnv);
 
         this.ctx[id] = ctx;
-        //return ctx;
     }
 
-    destroyCanvas(id){
+    destroyCanvas = (id) => {
         if(id){
             let cnv = document.querySelector(`#${id}`);
             if(cnv) cnv.remove();
@@ -49,9 +49,9 @@ class Maze {
                 e.remove();
             }); 
         }
-    }
+    };
 
-    initGrid(){
+    initGrid = () => {
         let grid = [];
         for(let r = 0; r < this.rows; r++){
             for(let c = 0; c < this.cols; c++){
@@ -61,34 +61,31 @@ class Maze {
             } 
         }
         this.grid = grid;
-        //return grid;
-    }
+    };
 
-    initDragger(){
-        console.log(this.sctx);
-        let dragger = new Dragger(this.sctx, this.rows, this.cols, this.cellsize);
+    initDragger = () => {
+        let dragger = new Dragger(this.ctx["overlay"], this.rows, this.cols, this.cellsize);
         this.dragger = dragger;
-        return dragger;
     }
 
-    refreshGrid(...kwargs){
+    refreshGrid = (...kwargs) => {
         if (kwargs.length != 0) {
             kwargs.forEach(cell => {
-                cell.show(this.ctx);
+                cell.show(this.ctx["grid"]);
             })
             return;
         }
         for(let i = 0; i < this.grid.length; i++){
-            this.grid[i].show(this.ctx);
+            this.grid[i].show(this.ctx["grid"]);
         }
-    }
+    };
 
-    index(r, c){
+    index = (r, c) => {
         if(r < 0 || c < 0 || c > this.cols - 1 || r > this.rows - 1) return -1;
         return c + r * this.cols;
-    }
+    };
 
-    randomNeighbor(cell){
+    randomNeighbor = (cell) => {
         
         let neighbors = [];
 
@@ -112,9 +109,9 @@ class Maze {
             return null;
         }
 
-    }
+    };
 
-    getNeighbors(cell, ignoreWalls = false){
+    getNeighbors = (cell, ignoreWalls = false) => {
         
         let neighbors = [];
         
@@ -137,29 +134,31 @@ class Maze {
         });
 
         return neighbors;
-    }
+    };
 
-    resetVisited(){
+    resetVisited = () => {
         for(let cell of this.grid){
             cell.visited = false;
+            cell.parent = null;
         }
-    }
+    };
 
-    highlightPath(cell){
+    highlightPath = (cell) => {
         setInterval(() => {
             if(cell.parent){
-                cell.parent.drawPath(this.sctx, cell, "#bcc90c");
+                cell.parent.drawPath(this.ctx["overlay"], cell, "#bcc90c");
                 cell = cell.parent;
             }
         }, 0);
-    }
+    };
 
-    async generateMaze(initialIndex){
+    generateMaze = async (startIndex) => {
 
         let next;
         let neighbors;
         let stack = [];
-        let curr = this.grid[initialIndex];
+        let curr = this.grid[startIndex];
+        this.genStart = startingIndex;
         curr.visited = true;
 
         await setIntervalAwaitable(() => {
@@ -185,13 +184,16 @@ class Maze {
                 if(stack.length == 0) {
 
                     this.resetVisited();
-                    this.grid[initialIndex].highlight(this.sctx, true, "#B3C5D7");
-                    this.grid[this.grid.length-1].highlight(this.sctx, true, "#B3C57");
+
+                    this.dragger.addSquare(startIndex);
+                    this.dragger.addSquare(this.grid.length-1);
+                    this.dragger.enableDragging();
 
                     let arrow = document.querySelector(".back-arrow");
                     arrow.style.display = "flex";
                     arrow.click();
 
+                    step = 0;
                     return true;
                 }
 
@@ -200,22 +202,24 @@ class Maze {
             }
             
 
-        },this.framerate);
+        }, this.framerate);
 
     };
 
-    solveMazeDfs(){
-        console.log("Solving with Dfs...");
-        this.sctx.reset();
+    solveMazeDfs = async () => {
+        //console.log("Solving with Dfs...");
+        this.ctx["overlay"].reset();
         this.resetVisited();
+
+        let startAlg = this.dragger.squares[0].index;
+        let endAlg = this.dragger.squares[1].index;
         
         let stack = [];
-        let curr = this.grid[0];
-        let dest = this.grid[this.grid.length-1];
+        let curr = this.grid[startAlg];
+        let dest = this.grid[endAlg];
         stack.push(curr);
         
-
-        setIntervalAwaitable(() => {
+        await setIntervalAwaitable(() => {
             if (stack.length > 0){
 
                 let v = stack.pop();
@@ -230,7 +234,7 @@ class Maze {
                     stack.push(w)
                 }
 
-                if (v.parent) v.parent.drawPath(this.sctx, v);
+                if (v.parent) v.parent.drawPath(this.ctx["overlay"], v);
 
                 if (v.r == dest.r && v.c == dest.c){
                     this.highlightPath(v);
@@ -240,19 +244,23 @@ class Maze {
             return false;
 
         }, this.framerate);
+
     }
 
-    solveMazeBfs(){
-        console.log("Solving with Bfs...");
-        this.sctx.reset();
+    solveMazeBfs = async () => {
+        //console.log("Solving with Bfs...");
+        this.ctx["overlay"].reset();
         this.resetVisited();
 
+        let startAlg = this.dragger.squares.at(0).index;
+        let endAlg = this.dragger.squares.at(1).index;
+
         let queue = [];
-        let curr = this.grid[0];
-        let dest = this.grid[this.grid.length-1];
+        let curr = this.grid[startAlg];
+        let dest = this.grid[endAlg];
         queue.push(curr);
 
-        setIntervalAwaitable(() => {
+        await setIntervalAwaitable(() => {
             if (queue.length > 0){
 
                 let v = queue.shift();
@@ -267,7 +275,7 @@ class Maze {
                     queue.push(w)
                 }
 
-                if (v.parent) v.parent.drawPath(this.sctx, v);
+                if (v.parent) v.parent.drawPath(this.ctx["overlay"], v);
 
                 if (v.r == dest.r && v.c == dest.c){
                     this.highlightPath(v);
@@ -277,29 +285,13 @@ class Maze {
             return false;
 
         }, this.framerate);
+    };
+
+    solveMazeDijkstra = async () => {
+        //console.log("Solving with Dijkstra..."); 
     }
 
-    solveMazeDijkstra(){
-        console.log("Solving with Dijkstra..."); 
-    }
-
-    solveMazeAstar(){
-        console.log("Solving with Astar..."); 
+    solveMazeAstar = async () => {
+        //console.log("Solving with Astar..."); 
     }
 }
-
-// const main = () => {
-
-//     let defaultValues = {
-//         rows : 10,
-//         cols : 10,
-//         cellsize : 50,
-//         fps: 0
-//     };
-
-//     let maze = new Maze(...Object.values(defaultValues));
-//     maze.generateMaze(0);
-
-// };
-
-// main();
