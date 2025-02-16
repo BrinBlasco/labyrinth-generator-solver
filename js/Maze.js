@@ -32,9 +32,11 @@ class Maze {
             shadowBlur : 0,
             shadowColor : "transparent",
             imageSmoothingEnabled : true,
-            imageSmoothingQuality : "high"
-        })
-        
+            imageSmoothingQuality : "high",
+            lineCap: "butt",
+            lineJoin : "round"
+        });
+
         left.appendChild(cnv);
 
         this.ctx[id] = ctx;
@@ -143,11 +145,13 @@ class Maze {
         }
     };
 
-    highlightPath = (cell) => {
-        setInterval(() => {
+    highlightPath = async (cell) => {
+        await setIntervalAwaitable(() => {
             if(cell.parent){
-                cell.parent.drawPath(this.ctx["overlay"], cell, "#bcc90c");
+                cell.parent.drawPath(this.ctx["overlay"], cell, "blue");
                 cell = cell.parent;
+            } else {
+                return true;
             }
         }, 0);
     };
@@ -166,6 +170,7 @@ class Maze {
             neighbors = this.getNeighbors(curr, true);
             next = neighbors[parseInt(Math.random()*neighbors.length)];
             
+            
             if(next){
 
                 next.visited = true;
@@ -173,10 +178,10 @@ class Maze {
                 stack.push(curr);
 
                 curr.removeWalls(next);
-                this.refreshGrid();
-
-                curr = next;
                 
+                curr = next;
+
+                this.refreshGrid();
                 return false;
 
             } else if (stack.length >= 0){
@@ -194,6 +199,7 @@ class Maze {
                     arrow.click();
 
                     step = 0;
+
                     return true;
                 }
 
@@ -217,6 +223,10 @@ class Maze {
         let stack = [];
         let curr = this.grid[startAlg];
         let dest = this.grid[endAlg];
+        
+        let expanded = 0;
+        let length = 0;
+
         stack.push(curr);
         
         await setIntervalAwaitable(() => {
@@ -226,24 +236,35 @@ class Maze {
 
                 if (v.visited) return false;
                 v.visited = true;
-        
-                let w;
-                for(w of this.getNeighbors(v)){
+                expanded++;
+
+                if (v.r == dest.r && v.c == dest.c){
+                    this.highlightPath(v);
+
+                    let pathNode = v;
+                    while(pathNode.parent){
+                        length++;
+                        pathNode = pathNode.parent;
+                    }
+
+                    console.log(`Dfs Expanded: ${expanded}`);
+                    console.log(`Dfs Path Length: ${length}`);
+                    return true;
+                }
+
+                for(let w of this.getNeighbors(v)){
                     if (w.visited) continue;
                     w.parent = v;
-                    stack.push(w)
+                    stack.push(w);
+                    w.highlight(this.ctx["overlay"], true, "cyan");
                 }
 
                 if (v.parent) v.parent.drawPath(this.ctx["overlay"], v);
 
-                if (v.r == dest.r && v.c == dest.c){
-                    this.highlightPath(v);
-                    return true;
-                }
             }
             return false;
 
-        }, this.framerate);
+        }, defaultValues.fps);
 
     }
 
@@ -254,6 +275,9 @@ class Maze {
 
         let startAlg = this.dragger.squares.at(0).index;
         let endAlg = this.dragger.squares.at(1).index;
+
+        let expanded = 0;
+        let length = 0;
 
         let queue = [];
         let curr = this.grid[startAlg];
@@ -267,31 +291,167 @@ class Maze {
 
                 if (v.visited) return false;
                 v.visited = true;
-        
+                expanded++;
+
                 let w;
                 for(w of this.getNeighbors(v)){
                     if (w.visited) continue;
                     w.parent = v;
                     queue.push(w)
+                    w.highlight(this.ctx["overlay"], true, "cyan");
                 }
 
                 if (v.parent) v.parent.drawPath(this.ctx["overlay"], v);
 
                 if (v.r == dest.r && v.c == dest.c){
                     this.highlightPath(v);
+
+                    let pathNode = v;
+                    while(pathNode.parent){
+                        length++;
+                        pathNode = pathNode.parent;
+                    }
+
+                    console.log(`Bfs Expanded: ${expanded}`);
+                    console.log(`Bfs Path Length: ${length}`);
+
                     return true;
                 }
             }
             return false;
 
-        }, this.framerate);
+        }, defaultValues.fps);
     };
 
     solveMazeDijkstra = async () => {
         //console.log("Solving with Dijkstra..."); 
+        this.ctx["overlay"].reset();
+        this.resetVisited();
+
+        let startAlg = this.dragger.squares[0].index;
+        let endAlg = this.dragger.squares[1].index;
+        
+        let pq = [];
+        let distances = new Map();
+
+        let expanded = 0;
+        let length = 0;
+
+        let start = this.grid[startAlg];
+        let dest = this.grid[endAlg];
+
+        distances.set(start, 0);
+        pq.push({ node: start, cost: 0 });
+
+        await setIntervalAwaitable(() => {
+            if (pq.length > 0) {
+                pq.sort((a, b) => a.cost - b.cost);
+                let v = pq.shift().node;
+
+                if (v.visited) return false;
+                v.visited = true;
+                expanded++;
+
+                if (v.r === dest.r && v.c === dest.c) {
+                    this.highlightPath(v);
+
+                    let pathNode = v;
+                    while(pathNode.parent){
+                        length++;
+                        pathNode = pathNode.parent;
+                    }
+
+                    console.log(`Djkstra's Expanded: ${expanded}`);
+                    console.log(`Djkstra's Path Length: ${length}`);
+
+                    return true;
+                }
+
+                let w;
+                for (w of this.getNeighbors(v)) {
+                    if (w.visited) continue;
+
+                    let newCost = distances.get(v) + 1;
+                    if (!distances.has(w) || newCost < distances.get(w)) {
+                        w.parent = v;
+                        distances.set(w, newCost);
+                        pq.push({ node: w, cost: newCost });
+                        w.highlight(this.ctx["overlay"], true, "cyan");
+                    }
+                }
+
+                if (v.parent) v.parent.drawPath(this.ctx["overlay"], v);
+            }
+            return false;
+        }, defaultValues.fps);
     }
 
     solveMazeAstar = async () => {
-        //console.log("Solving with Astar..."); 
-    }
+        // console.log("Solving with Astart...")
+        this.ctx["overlay"].reset();
+        this.resetVisited();
+    
+        let startAlg = this.dragger.squares[0].index;
+        let endAlg = this.dragger.squares[1].index;
+
+        let length = 0;
+        let expanded = 0;
+        
+        let openSet = [];
+        let gScore = new Map();
+        let fScore = new Map();
+    
+        let start = this.grid[startAlg];
+        let dest = this.grid[endAlg];
+    
+        gScore.set(start, 0);
+        fScore.set(start, this.heuristic(start, dest));
+    
+        openSet.push({ node: start, f: fScore.get(start) });
+    
+        await setIntervalAwaitable(() => {
+            if (openSet.length > 0) {
+                openSet.sort((a, b) => a.f - b.f);
+                let v = openSet.shift().node;
+    
+                if (v.visited) return false;
+                v.visited = true;
+                expanded++;
+    
+                if (v.r === dest.r && v.c === dest.c) {
+                    this.highlightPath(v);
+
+                    let pathNode = v;
+                    while(pathNode.parent){
+                        length++;
+                        pathNode = pathNode.parent;
+                    }
+
+                    console.log(`Astar Expanded: ${expanded}`);
+                    console.log(`Astar Path Length: ${length}`);
+
+                    return true;
+                }
+    
+                for (let w of this.getNeighbors(v)) {
+                    if (w.visited) continue;
+    
+                    let tentativeG = gScore.get(v) + 1;
+                    if (!gScore.has(w) || tentativeG < gScore.get(w)) {
+                        w.parent = v;
+                        gScore.set(w, tentativeG);
+                        fScore.set(w, tentativeG + this.heuristic(w, dest));
+    
+                        openSet.push({ node: w, f: fScore.get(w) });
+                        w.highlight(this.ctx["overlay"], true, "cyan");
+                    }
+                }
+    
+                if (v.parent) v.parent.drawPath(this.ctx["overlay"], v);
+            }
+            return false;
+        }, defaultValues.fps);
+    };
+    
+    heuristic = (a, b) => Math.abs(a.r - b.r) + Math.abs(a.c - b.c);
 }

@@ -9,7 +9,7 @@ class Dragger {
     }
 
     addSquare = (index) => {
-        if (this.squares.length >= 2) return;
+        if (this.squares.length >= 2) return; // najvec 2 kr ja
 
         const col = index % this.cols;
         const row = Math.floor(index / this.cols);
@@ -26,13 +26,13 @@ class Dragger {
     };
 
     drawSquare = (square, index) => {
-        let color = index == 0 ? "blue" : "red"; // only 2 squares, first blue second red
+        let color = index == 0 ? "green" : "red"; // only 2 squares, first blue second red
         this.ctx.fillStyle = color;
         this.ctx.fillRect(square.x, square.y, square.w, square.w);
     };
 
     clearSquareArea = (x, y, w) => {
-        this.ctx.clearRect(x, y, w, w);
+        this.ctx.clearRect(x-2, y-2, w+4, w+4);
     };
 
     handleMouseDown = (e) => {

@@ -105,11 +105,13 @@ class Cell {
         let w = this.w;
         let x = this.c * w;
         let y = this.r * w;
+
+        let lineWidth = w - 6;
         
         if(small){
-            drawRect(ctx,    x + w/2 - w/8,    y + w/2 - w/8,    w/4,    w/4,    color); //rgb(100,0,100)
+            drawRect(ctx,    x + w/2 - w/4,    y + w/2 - w/4,    w/2,    w/2,    color); //rgb(100,0,100)
         } else {
-            drawRect(ctx, x, y, w, w, color);        
+            drawRect(ctx, x+w/2-lineWidth/2, y+w/2-lineWidth/2, lineWidth, lineWidth, color);     
         }
     }
 
@@ -121,7 +123,7 @@ class Cell {
         let x2 = next.c * w;
         let y2 = next.r * w;
 
-        let lineWidth = w-20;
+        let lineWidth = w-6;
 
         drawLine(ctx, x1+w/2, y1+w/2, x2+w/2, y2+w/2, color, lineWidth);
 
