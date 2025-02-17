@@ -58,10 +58,16 @@ generateButton.addEventListener("click", async (e) => {
     startingIndex = maze.dragger.squares.at(0)?.index || 0;
     maze.dragger.reset();
 
+    arrow.style.display = "none";
     generateButton.disabled = true;
+
+    document.querySelectorAll(".dispAlg").forEach(el => {
+        el.textContent = "";
+    });
+    
     await maze.generateMaze(startingIndex);
 
-    
+    arrow.style.display = "flex";
     generateButton.disabled = false;
     clearButton.disabled = true;
     solveButton.disabled = true;
@@ -110,6 +116,10 @@ generateButton.addEventListener("click", async (e) => {
         maze.dragger.addSquare(0);
         maze.dragger.addSquare(maze.grid.length-1);
         maze.dragger.enableDragging();
+
+        document.querySelectorAll(".dispAlg").forEach(el => {
+            el.textContent = "";
+        });
     });
 
 });

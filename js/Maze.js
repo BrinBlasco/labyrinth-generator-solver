@@ -247,7 +247,10 @@ class Maze {
                         pathNode = pathNode.parent;
                     }
 
-                    console.log(`Dfs Expanded: ${expanded}`);
+                    let display = document.getElementById("dispDfs");
+                    display.textContent = `Expanded: ${expanded}; Length: ${length}`
+                    
+                    console.log(`\nDfs Expanded: ${expanded}`);
                     console.log(`Dfs Path Length: ${length}`);
                     return true;
                 }
@@ -311,8 +314,10 @@ class Maze {
                         length++;
                         pathNode = pathNode.parent;
                     }
-
-                    console.log(`Bfs Expanded: ${expanded}`);
+                    let display = document.getElementById("dispBfs");
+                    display.textContent = `Expanded: ${expanded}; Length: ${length}`
+                    
+                    console.log(`\nBfs Expanded: ${expanded}`);
                     console.log(`Bfs Path Length: ${length}`);
 
                     return true;
@@ -360,8 +365,10 @@ class Maze {
                         length++;
                         pathNode = pathNode.parent;
                     }
-
-                    console.log(`Djkstra's Expanded: ${expanded}`);
+                    let display = document.getElementById("dispDijkstra");
+                    display.textContent = `Expanded: ${expanded}; Length: ${length}`
+                    
+                    console.log(`\nDjkstra's Expanded: ${expanded}`);
                     console.log(`Djkstra's Path Length: ${length}`);
 
                     return true;
@@ -426,8 +433,11 @@ class Maze {
                         length++;
                         pathNode = pathNode.parent;
                     }
+                    let display = document.getElementById("dispAstar");
+                    display.textContent = `Expanded: ${expanded}; Length: ${length}`
+                                        
 
-                    console.log(`Astar Expanded: ${expanded}`);
+                    console.log(`\nAstar Expanded: ${expanded}`);
                     console.log(`Astar Path Length: ${length}`);
 
                     return true;
