@@ -78,31 +78,34 @@ generateButton.addEventListener("click", async (e) => {
         });
     });
 
-    solveButton.addEventListener("click", () => {
+    solveButton.addEventListener("click", async () => {
 
         let alg = document.querySelector("input[name='alg']:checked")?.value || "default";
         solveButton.disabled = true;
+        clearButton.disabled = true;
+        arrow.style.display = "none";
 
         maze.ctx["overlay"].reset();
         
         switch (alg) {
             case "dfs":
-                maze.solveMazeDfs();
+                await maze.solveMazeDfs();
                 break;
             case "bfs":
-                maze.solveMazeBfs();
+                await maze.solveMazeBfs();
                 break;
             case "dijkstra":
-                maze.solveMazeDijkstra();
+                await maze.solveMazeDijkstra();
                 break; 
             case "astar":
-                maze.solveMazeAstar();
+                await maze.solveMazeAstar();
                 break;
             default:
                 console.log("Unlockey u hit default");
                 break;
         }
 
+        arrow.style.display = "flex";
         solveButton.disabled = false;
         clearButton.disabled = false;
         maze.dragger.disableDragging();
