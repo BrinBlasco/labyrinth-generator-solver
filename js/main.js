@@ -9,7 +9,7 @@ let defaultValues = {
     rows : 10, 
     cols : 10,
     cellsize : 50,
-    fps: 0
+    fps: 1000
 };
 
 let step = 0;

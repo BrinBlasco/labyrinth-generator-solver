@@ -4,7 +4,7 @@ class Maze {
         this.rows = rows;
         this.cols = cols;
         this.cellsize = cellsize;
-        this.framerate = 1000/framerate;
+        this.fps = framerate/1000;
 
         this.width = this.cols * cellsize;
         this.height = this.rows * cellsize;
@@ -208,8 +208,7 @@ class Maze {
             }
             
 
-        }, this.framerate);
-
+        }, 0);
     };
 
     solveMazeDfs = async () => {
@@ -267,8 +266,7 @@ class Maze {
             }
             return false;
 
-        }, defaultValues.fps);
-
+        }, this.fps);
     }
 
     solveMazeBfs = async () => {
@@ -325,7 +323,7 @@ class Maze {
             }
             return false;
 
-        }, defaultValues.fps);
+        }, this.fps);
     };
 
     solveMazeDijkstra = async () => {
@@ -390,7 +388,8 @@ class Maze {
                 if (v.parent) v.parent.drawPath(this.ctx["overlay"], v);
             }
             return false;
-        }, defaultValues.fps);
+
+        }, this.fps);
     }
 
     solveMazeAstar = async () => {
@@ -460,8 +459,8 @@ class Maze {
                 if (v.parent) v.parent.drawPath(this.ctx["overlay"], v);
             }
             return false;
-        }, defaultValues.fps);
+        }, this.fps);
     };
     
-    heuristic = (a, b) => Math.abs(a.r - b.r) + Math.abs(a.c - b.c);
+    heuristic = (a, b) => Math.abs(a.r - b.r) + Math.abs(a.c - b.c); 
 }
