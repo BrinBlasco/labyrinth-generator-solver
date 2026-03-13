@@ -30,7 +30,7 @@ To run Labyrinth locally, follow these steps:
 1. **Clone the Repository**:
 
    ```bash
-   git clone https://github.com/your-username/labyrinth.git
+   git clone https://github.com/brinblasco/labyrinth.git
    cd labyrinth
    ```
 
